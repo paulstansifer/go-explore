@@ -1,6 +1,10 @@
-You need GnuGo installed and somewhere on your path.
+You need GnuGo installed and somewhere on your path.  Python needs to
+be able to find pygame.
 
-Up = undo.  Down = make GnuGo's move.  Click = make own move.
+Click = make a move.  Down = have GnuGo make a move.  Up = go back to
+explore other possibilities.
+
+Play around. 
 
 On my Mac, clicking on the program icon causes the game to crash.
 Seems to be a pygame bug (not related to the frivolous icon updating),
