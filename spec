@@ -29,3 +29,8 @@ tailored to its specific mistakes?
 
 to distinguish leaves more easily, gray/blur/dim pieces that haven't
 been changing between.
+
+for navigation purposes, color the board with gnugo's
+initial_influence function.  also, size the tokens based on a
+minimaxing of gnugo's score for leaf nodes.  have 'down' make the
+largest move.
