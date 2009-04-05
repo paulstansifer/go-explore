@@ -108,11 +108,21 @@ class GTP_speculator(threading.Thread):
       for m in moves:
         gnugo_bkg.w("play " + color_str[m.color] +
                     " " + to_gnu(m.coord))
+      next_color = color_str[moves_after(self.last_move.color)]
+
+
 
       #up-to-date.  Now estimate score (m/m redundant with below
       #self.last_move.set_absolute_score(gnugo_bkg.score())
 
-      next_color = color_str[moves_after(self.last_move.color)]
+      influence_str = gnugo_bkg.w("initial_influence "
+          + next_color + " territory_value",
+          self.size)
+      print influence_str
+      #convert to a matrix of numbers
+      self.last_move.influence = [[float(val) for val in line.split()]
+                                  for line in influence_str.split('\n')]
+      
 
       result = Move(
         self.last_move,
@@ -156,6 +166,7 @@ class Move:
     self.kid_protector = threading.RLock()
     self.ai_move_in_progress = threading.Lock()
     self.visited = False
+    self.influence = None
       
   def adopt(self, move):
     with self.kid_protector:
@@ -187,8 +198,6 @@ class Move:
                                    if k.minmaxed != None)
         cur_move = cur_move.parent
           
-
-        
     
 class Game:
   def __init__(self, size):
@@ -261,15 +270,6 @@ class Game:
     self.cur = m
     m.visited = True
 
-    influence_str = self.gnugo.w("initial_influence "
-        + color_str[self.to_play()] + " territory_value",
-        self.size)
-    print influence_str
-    #convert to a matrix of numbers
-    self.cur.influence = [[float(val) for val in line.split()]
-                          for line in influence_str.split('\n')]
-    
-
     GTP_speculator(self.size, self.cur).start()
     
   def gnugo_move(self):
@@ -320,7 +320,8 @@ class Goban:
     self.chip_uncertain = png_pair('chip_uncertain')
 
     self.empty = Surface((size*21,size*21))
-    self.empty.fill(Color(170,170,100,0))
+    self.empty.fill(Color(170,170,100,0))  #pretty color
+    #self.empty.fill(Color(128,128,128,0))  #more neutral-toned
 
     for i in xrange(0, size):
       draw.line(self.empty, Color(0,0,0,0),
@@ -433,6 +434,15 @@ class Goban:
             else:
               self.screen.blit(self.chip[k.color], (21*x+3, 21*y+2))
 
+
+          if self.g.cur.influence != None:
+            for x in xrange(self.size):
+              for y in xrange(self.size):
+                icc = lambda n: int(n+50 * self.g.cur.influence[x][y])
+
+                pygame.draw.aaline(self.screen, Color(icc(170),icc(170),icc(100),255),
+                                   (21*y+16, 21*(self.size-x-1)+16),
+                                   (21*y+5, 21*(self.size-x-1)+5), True)
           
 
     pygame.display.flip()
